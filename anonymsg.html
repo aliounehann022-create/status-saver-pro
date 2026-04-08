@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AnonyMsg — Messages anonymes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --g1: #25D366;
+  --g2: #128C7E;
+  --g3: #075E54;
+  --g4: #DCF8C6;
+  --gbg: #0a1f1c;
+  --gbg2: #0f2d28;
+  --gbg3: #1a3d37;
+  --white: #ffffff;
+  --off: rgba(255,255,255,0.06);
+  --border: rgba(37,211,102,0.18);
+  --text: rgba(255,255,255,0.9);
+  --muted: rgba(255,255,255,0.45);
+  --radius: 16px;
+  --font-h: 'Syne', sans-serif;
+  --font-b: 'DM Sans', sans-serif;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-b);
+  background: var(--gbg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow-x: hidden;
+}
+
+/* BACKGROUND BLOBS */
+body::before {
+  content: '';
+  position: fixed;
+  top: -120px; left: -120px;
+  width: 400px; height: 400px;
+  background: radial-gradient(circle, rgba(37,211,102,0.12) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+body::after {
+  content: '';
+  position: fixed;
+  bottom: -80px; right: -80px;
+  width: 320px; height: 320px;
+  background: radial-gradient(circle, rgba(18,140,126,0.10) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* SCREEN SYSTEM */
+.screen {
+  display: none;
+  width: 100%;
+  max-width: 440px;
+  padding: 0 16px 40px;
+  position: relative;
+  z-index: 1;
+  animation: fadeUp 0.4s ease both;
+}
+.screen.active { display: flex; flex-direction: column; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* TOP LOGO */
+.logo {
+  font-family: var(--font-h);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--g1);
+  text-align: center;
+  padding: 32px 0 8px;
+}
+
+.logo-dot { color: var(--muted); }
+
+/* HERO */
+.hero {
+  text-align: center;
+  padding: 32px 0 28px;
+}
+
+.hero-icon {
+  width: 72px; height: 72px;
+  background: linear-gradient(135deg, var(--g1), var(--g2));
+  border-radius: 24px;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 20px;
+  font-size: 32px;
+  box-shadow: 0 8px 32px rgba(37,211,102,0.25);
+}
+
+.hero h1 {
+  font-family: var(--font-h);
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.15;
+  margin-bottom: 10px;
+  background: linear-gradient(135deg, #fff 40%, var(--g1));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero p {
+  font-size: 15px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+/* CARD */
+.card {
+  background: var(--gbg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 16px;
+}
+
+/* LABEL */
+label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--g1);
+  margin-bottom: 10px;
+}
+
+/* INPUT */
+.input-wrap {
+  display: flex;
+  align-items: center;
+  background: var(--off);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 4px 4px 4px 16px;
+  transition: border-color 0.2s;
+}
+.input-wrap:focus-within { border-color: var(--g1); }
+
+.prefix {
+  font-size: 14px;
+  color: var(--muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+input[type="text"],
+input[type="password"] {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--white);
+  font-family: var(--font-b);
+  font-size: 16px;
+  padding: 12px 8px;
+  width: 100%;
+}
+input::placeholder { color: var(--muted); }
+
+/* STANDALONE INPUT */
+.solo-input {
+  width: 100%;
+  background: var(--off);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--white);
+  font-family: var(--font-b);
+  font-size: 16px;
+  padding: 14px 16px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.solo-input:focus { border-color: var(--g1); }
+.solo-input::placeholder { color: var(--muted); }
+
+textarea.solo-input {
+  resize: none;
+  min-height: 120px;
+  line-height: 1.6;
+}
+
+/* BUTTONS */
+.btn {
+  width: 100%;
+  padding: 15px;
+  border: none;
+  border-radius: 12px;
+  font-family: var(--font-h);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.btn:active { transform: scale(0.97); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--g1), var(--g2));
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(37,211,102,0.25);
+}
+.btn-primary:hover:not(:disabled) { box-shadow: 0 6px 28px rgba(37,211,102,0.35); }
+
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+.btn-outline:hover { border-color: rgba(37,211,102,0.4); background: var(--off); }
+
+.btn-wa {
+  background: #25D366;
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(37,211,102,0.3);
+}
+.btn-wa:hover { box-shadow: 0 6px 28px rgba(37,211,102,0.45); }
+
+.btn-ghost {
+  background: none;
+  border: none;
+  color: var(--g1);
+  font-family: var(--font-b);
+  font-size: 14px;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+}
+
+/* LINK BOX */
+.link-box {
+  background: var(--gbg3);
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.link-box:hover { border-color: var(--g1); }
+.link-box-url {
+  flex: 1;
+  font-size: 13px;
+  color: var(--g1);
+  word-break: break-all;
+  font-family: monospace;
+}
+.copy-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+  background: var(--off);
+  padding: 4px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.link-box.copied .copy-label { color: var(--g1); }
+
+/* PROFILE BADGE */
+.profile-badge {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  background: var(--gbg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 16px;
+}
+.avatar {
+  width: 52px; height: 52px;
+  background: linear-gradient(135deg, var(--g1), var(--g2));
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-h);
+  font-size: 20px;
+  font-weight: 800;
+  color: white;
+  flex-shrink: 0;
+}
+.profile-info h2 {
+  font-family: var(--font-h);
+  font-size: 17px;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+.profile-info p { font-size: 13px; color: var(--muted); }
+
+/* DIVIDER */
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 8px 0 16px;
+  color: var(--muted);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.divider::before, .divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* MSG BUBBLE */
+.msg-bubble {
+  background: var(--gbg3);
+  border: 1px solid var(--border);
+  border-radius: 0 14px 14px 14px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  position: relative;
+  animation: fadeUp 0.3s ease both;
+}
+.msg-bubble p { font-size: 15px; line-height: 1.6; color: var(--text); word-break: break-word; }
+.msg-bubble .msg-time { font-size: 11px; color: var(--muted); margin-top: 8px; text-align: right; }
+.msg-bubble .msg-num {
+  position: absolute;
+  top: 10px; right: 12px;
+  font-size: 10px;
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* STATS BAR */
+.stats-bar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.stat {
+  flex: 1;
+  background: var(--gbg2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 8px;
+  text-align: center;
+}
+.stat-n {
+  font-family: var(--font-h);
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--g1);
+}
+.stat-l { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+/* SUCCESS STATE */
+.success-box {
+  text-align: center;
+  padding: 28px 20px;
+  background: var(--gbg2);
+  border: 1px solid rgba(37,211,102,0.3);
+  border-radius: var(--radius);
+  margin-bottom: 16px;
+  animation: fadeUp 0.4s ease;
+}
+.success-icon {
+  font-size: 40px;
+  margin-bottom: 12px;
+  display: block;
+}
+.success-box h3 {
+  font-family: var(--font-h);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--g1);
+  margin-bottom: 6px;
+}
+.success-box p { font-size: 14px; color: var(--muted); }
+
+/* TOAST */
+#toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--g1);
+  color: #fff;
+  font-family: var(--font-h);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 12px 24px;
+  border-radius: 40px;
+  z-index: 9999;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  opacity: 0;
+  white-space: nowrap;
+  pointer-events: none;
+}
+#toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+/* CHAR COUNT */
+.char-count { text-align: right; font-size: 12px; color: var(--muted); margin-top: 6px; }
+
+/* ADMIN HINT */
+.admin-hint {
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 8px;
+}
+.admin-hint a { color: var(--g1); text-decoration: none; cursor: pointer; }
+
+/* EMPTY STATE */
+.empty {
+  text-align: center;
+  padding: 40px 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+.empty-icon { font-size: 36px; display: block; margin-bottom: 12px; }
+
+/* OWNER TAG */
+.owner-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(37,211,102,0.12);
+  border: 1px solid rgba(37,211,102,0.25);
+  color: var(--g1);
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  letter-spacing: 0.04em;
+}
+
+/* SCROLLABLE MESSAGES */
+.msg-list { padding-bottom: 8px; }
+
+/* RESPONSIVE TWEAKS */
+@media (max-width: 380px) {
+  .hero h1 { font-size: 24px; }
+  .stat-n { font-size: 18px; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- ====== SCREEN 1: ACCUEIL ====== -->
+<div class="screen active" id="s-home">
+  <div class="logo">ANONY<span class="logo-dot">✦</span>MSG</div>
+  <div class="hero">
+    <div class="hero-icon">💬</div>
+    <h1>Reçois des messages anonymes</h1>
+    <p>Génère ton lien unique et partage-le.<br>Tes amis t'envoient des messages anonymes.</p>
+  </div>
+
+  <div class="card">
+    <label for="home-pseudo">Ton pseudo ou nom d'utilisateur</label>
+    <div class="input-wrap">
+      <span class="prefix">@</span>
+      <input type="text" id="home-pseudo" placeholder="tomsanchez" maxlength="30" autocomplete="off" spellcheck="false">
+    </div>
+  </div>
+
+  <button class="btn btn-primary" onclick="generateLink()">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+    Générer mon lien anonyme
+  </button>
+</div>
+
+<!-- ====== SCREEN 2: PARTAGE ====== -->
+<div class="screen" id="s-share">
+  <div class="logo">ANONY<span class="logo-dot">✦</span>MSG</div>
+
+  <div style="padding-top:24px; text-align:center; margin-bottom:20px">
+    <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:var(--g1);font-weight:600;margin-bottom:8px">Ton lien est prêt</div>
+    <p id="share-pseudo-display" style="font-family:var(--font-h);font-size:22px;font-weight:800;"></p>
+    <p style="font-size:13px;color:var(--muted);margin-top:4px">Partage ce lien pour recevoir des messages anonymes</p>
+  </div>
+
+  <div class="card">
+    <label>Ton lien unique</label>
+    <div class="link-box" id="link-box" onclick="copyLink()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;color:var(--g1)"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+      <span class="link-box-url" id="link-display"></span>
+      <span class="copy-label" id="copy-label">Copier</span>
+    </div>
+  </div>
+
+  <button class="btn btn-wa" onclick="shareWhatsApp()" style="margin-bottom:10px">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+    Partager sur WhatsApp
+  </button>
+
+  <button class="btn btn-outline" onclick="goToMyMessages()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    Voir mes messages reçus
+  </button>
+</div>
+
+<!-- ====== SCREEN 3: RÉCEPTION / ENVOI ====== -->
+<div class="screen" id="s-receive">
+  <div class="logo">ANONY<span class="logo-dot">✦</span>MSG</div>
+
+  <!-- OWNER VIEW -->
+  <div id="owner-view" style="display:none; flex-direction:column; gap:0">
+    <div style="padding:16px 0 8px">
+      <span class="owner-tag">🔒 Espace privé</span>
+      <div id="owner-badge"></div>
+    </div>
+
+    <div class="stats-bar" id="stats-bar"></div>
+
+    <div class="card" style="padding:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <label style="margin:0">Messages reçus</label>
+        <button class="btn-ghost" onclick="clearOwnerMessages()" style="font-size:12px;color:var(--muted)">Tout effacer</button>
+      </div>
+      <div id="owner-msgs" class="msg-list"></div>
+    </div>
+
+    <button class="btn btn-outline" onclick="goShareFromOwner()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      Partager mon lien à nouveau
+    </button>
+  </div>
+
+  <!-- SENDER VIEW -->
+  <div id="sender-view" style="display:none; flex-direction:column; gap:0">
+    <div style="padding:16px 0 0">
+      <div id="sender-badge"></div>
+    </div>
+
+    <!-- SEND FORM -->
+    <div id="send-form-wrap">
+      <div class="card">
+        <label>Ton message anonyme</label>
+        <textarea class="solo-input" id="msg-text" maxlength="500" placeholder="Écris ce que tu veux, tu resteras anonyme…" oninput="document.getElementById('char-disp').textContent=this.value.length"></textarea>
+        <div class="char-count"><span id="char-disp">0</span> / 500</div>
+      </div>
+      <button class="btn btn-primary" onclick="sendMessage()" style="margin-bottom:16px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        Envoyer anonymement
+      </button>
+    </div>
+
+    <!-- SUCCESS -->
+    <div id="send-success" style="display:none">
+      <div class="success-box">
+        <span class="success-icon">🎉</span>
+        <h3>Message envoyé !</h3>
+        <p>Ton message a été envoyé anonymement.<br>La personne ne sait pas qui tu es.</p>
+      </div>
+      <button class="btn btn-outline" onclick="resetSendForm()" style="margin-bottom:16px">Envoyer un autre message</button>
+    </div>
+
+    <!-- CTA CREATE OWN -->
+    <div class="divider">Toi aussi</div>
+    <div class="card" style="text-align:center">
+      <p style="font-size:14px;color:var(--muted);margin-bottom:16px">Tu veux recevoir des messages anonymes ?<br>Crée ton propre lien en 10 secondes.</p>
+      <input type="text" class="solo-input" id="cta-pseudo" placeholder="Entre ton pseudo" maxlength="30" style="margin-bottom:12px">
+      <button class="btn btn-primary" onclick="ctaCreate()">
+        ✦ Créer mon lien
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ====== SCREEN: 404 ====== -->
+<div class="screen" id="s-404">
+  <div class="logo">ANONY<span class="logo-dot">✦</span>MSG</div>
+  <div style="text-align:center;padding:60px 0 30px">
+    <div style="font-size:56px;margin-bottom:16px">🔍</div>
+    <h2 style="font-family:var(--font-h);font-size:22px;font-weight:800;margin-bottom:10px">Lien introuvable</h2>
+    <p style="font-size:14px;color:var(--muted);margin-bottom:28px">Ce lien n'existe pas ou a été supprimé.</p>
+    <button class="btn btn-primary" onclick="goHome()">Créer mon propre lien</button>
+  </div>
+</div>
+
+<script>
+// ===================== STORAGE =====================
+const DB_KEY = 'anonymsg_db_v2';
+const SESSION_KEY = 'anonymsg_session';
+
+function db() {
+  try { return JSON.parse(localStorage.getItem(DB_KEY)) || {}; } catch { return {}; }
+}
+function dbSet(data) { localStorage.setItem(DB_KEY, JSON.stringify(data)); }
+
+function getProfile(id) { return db()[id] || null; }
+
+function createProfile(pseudo) {
+  const id = 'u' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  const data = db();
+  data[id] = { pseudo: pseudo.trim(), messages: [], created: Date.now() };
+  dbSet(data);
+  return id;
+}
+
+function saveMessage(id, text) {
+  const data = db();
+  if (!data[id]) return false;
+  data[id].messages.unshift({ text: text.trim(), date: new Date().toISOString() });
+  dbSet(data);
+  return true;
+}
+
+function getSession() {
+  try { return JSON.parse(sessionStorage.getItem(SESSION_KEY)); } catch { return null; }
+}
+function setSession(id) { sessionStorage.setItem(SESSION_KEY, JSON.stringify({ id })); }
+
+// ===================== ROUTING =====================
+function getHash() {
+  const h = location.hash.slice(1);
+  return h || null;
+}
+
+function setHash(h) { location.hash = h ? '#' + h : '#'; }
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById(id);
+  if (el) el.classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function route() {
+  const hash = getHash();
+  if (!hash || hash === '') {
+    showScreen('s-home');
+    return;
+  }
+  if (hash === 'share') {
+    const sess = getSession();
+    if (!sess) { goHome(); return; }
+    renderShare(sess.id);
+    showScreen('s-share');
+    return;
+  }
+  // It's a profile ID
+  const profile = getProfile(hash);
+  if (!profile) { showScreen('s-404'); return; }
+
+  const sess = getSession();
+  const isOwner = sess && sess.id === hash;
+
+  renderReceive(hash, profile, isOwner);
+  showScreen('s-receive');
+}
+
+window.addEventListener('hashchange', route);
+window.addEventListener('DOMContentLoaded', route);
+
+// ===================== SCREEN ACTIONS =====================
+
+function goHome() { setHash(''); }
+
+function generateLink() {
+  const raw = document.getElementById('home-pseudo').value.trim();
+  if (!raw) { showToast('Saisis ton pseudo d\'abord !'); return; }
+  const pseudo = raw.replace(/[^a-zA-Z0-9_.\-]/g, '').slice(0, 30) || raw.slice(0, 30);
+  const id = createProfile(pseudo);
+  setSession(id);
+  setHash('share');
+}
+
+function renderShare(id) {
+  const profile = getProfile(id);
+  if (!profile) return;
+  const link = buildLink(id);
+  document.getElementById('share-pseudo-display').textContent = '@' + profile.pseudo;
+  document.getElementById('link-display').textContent = link;
+}
+
+function buildLink(id) {
+  return location.origin + location.pathname + '#' + id;
+}
+
+let currentShareId = null;
+
+function shareWhatsApp() {
+  const sess = getSession();
+  if (!sess) return;
+  const link = buildLink(sess.id);
+  const profile = getProfile(sess.id);
+  const text = encodeURIComponent(`Pose-moi une question anonymement : ${link}\n\n(Tu peux tout me dire, tu resteras anonyme 😊)`);
+  window.open(`https://wa.me/?text=${text}`, '_blank');
+}
+
+function copyLink() {
+  const sess = getSession();
+  if (!sess) return;
+  const link = buildLink(sess.id);
+  navigator.clipboard.writeText(link).then(() => {
+    const box = document.getElementById('link-box');
+    const lbl = document.getElementById('copy-label');
+    box.classList.add('copied');
+    lbl.textContent = 'Copié !';
+    showToast('Lien copié 📋');
+    setTimeout(() => { box.classList.remove('copied'); lbl.textContent = 'Copier'; }, 2000);
+  }).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = link; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('Lien copié 📋');
+  });
+}
+
+function goToMyMessages() {
+  const sess = getSession();
+  if (!sess) return;
+  setHash(sess.id);
+}
+
+function goShareFromOwner() {
+  const sess = getSession();
+  if (!sess) return;
+  setHash('share');
+}
+
+// ===================== RECEIVE SCREEN =====================
+let currentProfileId = null;
+
+function renderReceive(id, profile, isOwner) {
+  currentProfileId = id;
+
+  const ownerV = document.getElementById('owner-view');
+  const senderV = document.getElementById('sender-view');
+
+  if (isOwner) {
+    ownerV.style.display = 'flex';
+    senderV.style.display = 'none';
+    renderOwnerView(id, profile);
+  } else {
+    ownerV.style.display = 'none';
+    senderV.style.display = 'flex';
+    renderSenderView(id, profile);
+  }
+}
+
+function renderOwnerView(id, profile) {
+  // Badge
+  document.getElementById('owner-badge').innerHTML = `
+    <div class="profile-badge">
+      <div class="avatar">${profile.pseudo[0].toUpperCase()}</div>
+      <div class="profile-info">
+        <h2>@${escHtml(profile.pseudo)}</h2>
+        <p>Ton espace de messages anonymes</p>
+      </div>
+    </div>`;
+
+  // Stats
+  const msgs = profile.messages;
+  const today = new Date().toDateString();
+  const todayN = msgs.filter(m => new Date(m.date).toDateString() === today).length;
+  const avgLen = msgs.length ? Math.round(msgs.reduce((s, m) => s + m.text.length, 0) / msgs.length) : 0;
+  document.getElementById('stats-bar').innerHTML = `
+    <div class="stat"><div class="stat-n">${msgs.length}</div><div class="stat-l">Total</div></div>
+    <div class="stat"><div class="stat-n">${todayN}</div><div class="stat-l">Aujourd'hui</div></div>
+    <div class="stat"><div class="stat-n">${avgLen}</div><div class="stat-l">Moy. car.</div></div>`;
+
+  // Messages
+  const list = document.getElementById('owner-msgs');
+  if (!msgs.length) {
+    list.innerHTML = `<div class="empty"><span class="empty-icon">📭</span>Aucun message reçu.<br>Partage ton lien pour en recevoir !</div>`;
+    return;
+  }
+  list.innerHTML = msgs.map((m, i) => `
+    <div class="msg-bubble">
+      <span class="msg-num">#${msgs.length - i}</span>
+      <p>${escHtml(m.text)}</p>
+      <div class="msg-time">${fmtDate(m.date)}</div>
+    </div>`).join('');
+}
+
+function renderSenderView(id, profile) {
+  document.getElementById('sender-badge').innerHTML = `
+    <div class="profile-badge" style="margin-bottom:16px">
+      <div class="avatar">${profile.pseudo[0].toUpperCase()}</div>
+      <div class="profile-info">
+        <h2>Message pour @${escHtml(profile.pseudo)}</h2>
+        <p>Tu resteras complètement anonyme 🔒</p>
+      </div>
+    </div>`;
+  document.getElementById('msg-text').value = '';
+  document.getElementById('char-disp').textContent = '0';
+  document.getElementById('send-form-wrap').style.display = 'block';
+  document.getElementById('send-success').style.display = 'none';
+  document.getElementById('cta-pseudo').value = '';
+}
+
+function sendMessage() {
+  const text = document.getElementById('msg-text').value.trim();
+  if (!text) { showToast('Écris un message d\'abord !'); return; }
+  if (!currentProfileId) return;
+
+  const btn = document.querySelector('#send-form-wrap .btn');
+  btn.disabled = true;
+  btn.textContent = 'Envoi…';
+
+  setTimeout(() => {
+    saveMessage(currentProfileId, text);
+    document.getElementById('send-form-wrap').style.display = 'none';
+    document.getElementById('send-success').style.display = 'block';
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Envoyer anonymement';
+  }, 700);
+}
+
+function resetSendForm() {
+  document.getElementById('msg-text').value = '';
+  document.getElementById('char-disp').textContent = '0';
+  document.getElementById('send-form-wrap').style.display = 'block';
+  document.getElementById('send-success').style.display = 'none';
+}
+
+function ctaCreate() {
+  const pseudo = document.getElementById('cta-pseudo').value.trim();
+  if (!pseudo) { showToast('Entre ton pseudo d\'abord !'); return; }
+  document.getElementById('home-pseudo').value = pseudo;
+  generateLink();
+}
+
+function clearOwnerMessages() {
+  if (!confirm('Supprimer tous les messages ?')) return;
+  const data = db();
+  if (data[currentProfileId]) {
+    data[currentProfileId].messages = [];
+    dbSet(data);
+    renderOwnerView(currentProfileId, data[currentProfileId]);
+    showToast('Messages supprimés');
+  }
+}
+
+// ===================== UTILS =====================
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+            .replace(/"/g,'&quot;').replace(/\n/g,'<br>');
+}
+
+function fmtDate(iso) {
+  const d = new Date(iso);
+  return d.toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit', year:'numeric' })
+    + ' • ' + d.toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
+}
+
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// Enter key on home input
+document.getElementById('home-pseudo').addEventListener('keydown', e => {
+  if (e.key === 'Enter') generateLink();
+});
+</script>
+</body>
+</html>
